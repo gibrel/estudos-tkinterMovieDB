@@ -79,3 +79,5 @@ class MovieDatabase:
 
 
 MovieDatabase()
+
+# pyinstaller main.py --onefile -n "Music Player" --noconsole --hidden-import='dotenv' --hidden-import='tksheet' --hidden-import='requests'
