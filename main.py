@@ -4,6 +4,7 @@ import json
 from dotenv import load_dotenv
 from os import environ
 import re
+import tksheet
 
 
 class MovieDatabase:
@@ -16,8 +17,8 @@ class MovieDatabase:
 
         self.window = Tk()
         self.window.title("Movie Database")
-        window_width = 500
-        window_height = 400
+        window_width = 520
+        window_height = 420
         screen_width = self.window.winfo_screenwidth()
         screen_height = self.window.winfo_screenheight()
         self.window.geometry(self.number_to_string(window_width) + "x" +
@@ -33,10 +34,18 @@ class MovieDatabase:
         self.text_entry.grid(row=0, column=0, padx=10, pady=10)
 
         self.button_search = Button(self.frame, text="Search", font="Comic 11 bold", command=self.search_film)
-        self.button_search.grid(row=0, column=1)
+        self.button_search.grid(row=0, column=1, padx=10)
 
-        self.list = Listbox(self.window)
-        self.list.pack(fill=BOTH, expand=TRUE)
+        # self.list = Listbox(self.window)
+        # self.list.pack(fill=BOTH, expand=TRUE)
+
+        self.frame2 = Frame(self.window)
+        self.frame2.pack(expand=TRUE)
+
+        self.list = tksheet.Sheet(self.frame2, data=[[f"Row {r}, Column {c}\nnewline1\nnewline2" for c in range(3)]
+                                                     for r in range(10)])
+        self.list.enable_bindings()
+        self.list.grid(row=0, column=0, sticky=NSEW)
 
         self.window.mainloop()
 
@@ -49,20 +58,15 @@ class MovieDatabase:
 
     def search_film(self):
         try:
-            request = requests.get(self.link + "s=" + self.replace_spaces(self.text_entry.get()) + "&apikey=" + self.apikey)
-            # print(request)
+            request = requests.get(self.link + "s=" + self.replace_spaces(self.text_entry.get()) +
+                                   "&apikey=" + self.apikey)
             dictionary = json.loads(request.text)
-            # print(dictionary)
-            self.list.delete(0, END)
+            medias = []
             for media in dictionary["Search"]:
-                # print(media)
-                self.list.insert(END,
-                                 ("Title: " + media["Title"] +
-                                  "    Year: " + media["Year"] +
-                                  "    Type: " + media["Type"]))
+                medias.insert(len(medias), (media["Title"], media["Year"], media["Type"]))
+            self.list.set_sheet_data(data=medias)
         except KeyError:
-            self.list.delete(0, END)
-            self.list.insert(END, "Media not found")
+            self.list.set_sheet_data(data=[["Media not Found"]])
 
     @staticmethod
     def replace_spaces(name):
